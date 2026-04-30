@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam Score Comparison</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:     #2f6fed;
+      --sky:      #0ea5e9;
+      --gold:     #f7c948;
+      --text:     #0f172a;
+      --muted:    #475569;
+      --border:   rgba(148,163,184,0.2);
+      --bg:       #eef4ff;
+      --card:     rgba(255,255,255,0.98);
+      --radius:   24px;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(251,191,36,0.15), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, #f8fafc 50%, #eef2f7 100%);
+    }
+
+    .page { max-width: 1140px; margin: 0 auto; padding: 36px 20px 60px; }
+
+    /* ── Page title ── */
+    .page-header { margin-bottom: 28px; }
+    .page-header .eyebrow {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: 8px;
+    }
+    .page-header h1 { font-size: clamp(1.6rem,3.5vw,2.6rem); line-height: 1.1; }
+    .page-header p  { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 60px rgba(15,23,42,0.10);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-eyebrow {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; margin-bottom: 4px;
+    }
+    .card-eyebrow.blue { color: var(--blue); }
+    .card-eyebrow.sky  { color: var(--sky);  }
+    .card-title { font-size: clamp(1.2rem,2.5vw,2rem); font-weight: 800; line-height: 1.1; }
+    .card-desc  { color: var(--muted); font-size: 0.88rem; margin-top: 8px; }
+
+    /* ── Card header ── */
+    .card-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 20px;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      min-width: 200px; padding: 14px 16px;
+      border: 1px solid var(--border); border-radius: 18px;
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+    }
+    .legend-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem; font-weight: 600; color: #334155;
+    }
+    .legend-row + .legend-row { margin-top: 9px; }
+    .legend-bar {
+      display: inline-block; flex-shrink: 0; border-radius: 4px;
+    }
+    .legend-bar.national { width:16px; height:28px; background:rgba(148,163,184,0.42); border:1px solid rgba(100,116,139,0.22); }
+    .legend-bar.school   { width:10px; height:22px; background: var(--blue); }
+    .legend-star { width:18px; height:18px; display:inline-flex; color: var(--gold);
+                   filter: drop-shadow(0 0 5px rgba(247,201,72,0.85)); }
+    .legend-star svg { width:100%; height:100%; }
+
+    /* ── Chart wrap ── */
+    .chart-scroll { overflow-x: auto; }
+    .chart-wrap   { position: relative; }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed; pointer-events: none;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.97);
+      border: 1px solid rgba(148,163,184,0.2);
+      border-radius: 13px;
+      box-shadow: 0 14px 36px rgba(15,23,42,0.14);
+      font-size: 0.85rem; line-height: 1.9;
+      color: var(--text);
+      opacity: 0; transition: opacity 0.12s;
+      z-index: 999;
+    }
+    #tooltip.show { opacity: 1; }
+    #tooltip strong { font-weight: 800; }
+    .tt-dot {
+      display: inline-block; width: 9px; height: 9px;
+      border-radius: 2px; margin-right: 5px; vertical-align: middle;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      margin-top: 20px; overflow-x: auto;
+      border: 1px solid var(--border); border-radius: 16px;
+      background: rgba(255,255,255,0.88);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(226,232,240,0.9); white-space: nowrap; }
+    th { background: rgba(248,250,252,0.96); font-size: 0.76rem; font-weight: 800;
+         letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(241,245,249,0.7); }
+    .me-cell { color: #b45309; font-weight: 800; }
+
+    /* ── Add form ── */
+    .add-form-card { margin-bottom: 24px; }
+    .add-form-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
+    .add-form {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; flex: 1 1 120px; }
+    .field.wide { flex: 2 1 180px; }
+    .field label { font-size: 0.74rem; font-weight: 700; color: var(--muted);
+                   letter-spacing: 0.05em; text-transform: uppercase; }
+    .field input {
+      padding: 9px 11px;
+      border: 1.5px solid rgba(148,163,184,0.35);
+      border-radius: 9px;
+      background: rgba(248,250,252,0.9);
+      color: var(--text); font-size: 0.93rem;
+      outline: none; width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47,111,237,0.14);
+      background: #fff;
+    }
+    .btn-add {
+      padding: 10px 22px; border: none; border-radius: 9px;
+      background: var(--blue); color: #fff;
+      font-size: 0.93rem; font-weight: 700; cursor: pointer;
+      white-space: nowrap; height: 40px; align-self: flex-end;
+      transition: background 0.15s;
+    }
+    .btn-add:hover { background: #1d55cc; }
+    .form-error { margin-top: 10px; color: #dc2626; font-size: 0.85rem; font-weight: 600; }
+
+    /* ── Delete button ── */
+    .btn-del {
+      padding: 3px 10px; border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 7px; background: rgba(254,242,242,0.7);
+      color: #dc2626; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      transition: background 0.14s;
+    }
+    .btn-del:hover { background: rgba(254,226,226,0.9); }
+
+    /* ── How-to button ── */
+    .howto-section {
+      text-align: center; margin-top: 12px; padding-top: 12px;
+    }
+    .btn-howto {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px;
+      border: 2px solid var(--blue);
+      border-radius: 14px;
+      background: rgba(239,246,255,0.8);
+      color: var(--blue);
+      font-size: 1rem; font-weight: 800;
+      text-decoration: none;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .btn-howto:hover {
+      background: var(--blue); color: #fff;
+      box-shadow: 0 8px 24px rgba(47,111,237,0.28);
+    }
+    .btn-howto svg { flex-shrink: 0; }
+
+    @media (max-width: 700px) {
+      .card { padding: 18px; border-radius: 18px; }
+      .card-header { flex-direction: column; }
+      .legend { width: 100%; min-width: 0; }
+      .add-form { flex-direction: column; }
+      .field, .field.wide { flex: none; width: 100%; }
+      .btn-add { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="tooltip"></div>
+
+<div class="page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <p class="eyebrow">ผลการสอบ</p>
+    <h1>Exam Score Comparison</h1>
+    <p>เปรียบเทียบคะแนนสอบรายวิชา — ระดับประเทศ · โรงเรียน · คะแนนของฉัน</p>
+  </div>
+
+  <!-- ── Score Chart Card ── -->
+  <div class="card" id="scoreCard">
+    <div class="card-header">
+      <div>
+        <p class="card-eyebrow blue">Score Comparison</p>
+        <h2 class="card-title">เปรียบเทียบคะแนนสอบ</h2>
+        <p class="card-desc">
+          แท่งสีเทา&nbsp;=&nbsp;ค่าเฉลี่ยประเทศ &nbsp;·&nbsp;
+          แท่งสีน้ำเงิน&nbsp;=&nbsp;ค่าเฉลี่ยโรงเรียน &nbsp;·&nbsp;
+          ดาว&nbsp;=&nbsp;คะแนนของฉัน
+        </p>
+      </div>
+      <div class="legend">
+        <div class="legend-row">
+          <span class="legend-bar national"></span>
+          <span>ค่าเฉลี่ยประเทศ</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-bar school"></span>
+          <span>ค่าเฉลี่ยโรงเรียน</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-star">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor"/></svg>
+          </span>
+          <span>คะแนนของฉัน</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-scroll">
+      <div class="chart-wrap" id="scoreChartWrap"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="scoreTable">
+        <thead>
+          <tr>
+            <th>วิชา</th><th>จำนวนคน</th>
+            <th>ค่าเฉลี่ยประเทศ</th><th>ค่าเฉลี่ยโรงเรียน</th>
+            <th>คะแนนของฉัน</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="scoreTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Count Chart Card ── -->
+  <div class="card" id="countCard">
+    <p class="card-eyebrow sky">Participants</p>
+    <h2 class="card-title">จำนวนผู้สอบรายวิชา</h2>
+    <div class="chart-scroll" style="margin-top:12px;">
+      <div class="chart-wrap" id="countChartWrap"></div>
+    </div>
+  </div>
+
+  <!-- ── Add Subject Form ── -->
+  <div class="card add-form-card">
+    <p class="add-form-title">เพิ่มวิชา</p>
+    <div class="add-form">
+      <div class="field wide">
+        <label for="f-subject">ชื่อวิชา</label>
+        <input id="f-subject" type="text" placeholder="เช่น ประวัติศาสตร์" />
+      </div>
+      <div class="field">
+        <label for="f-count">จำนวนคน</label>
+        <input id="f-count" type="number" placeholder="เช่น 1200" />
+      </div>
+      <div class="field">
+        <label for="f-national">คะแนนประเทศ</label>
+        <input id="f-national" type="number" placeholder="0–100" />
+      </div>
+      <div class="field">
+        <label for="f-school">คะแนนโรงเรียน</label>
+        <input id="f-school" type="number" placeholder="0–100" />
+      </div>
+      <div class="field">
+        <label for="f-me">คะแนนของฉัน</label>
+        <input id="f-me" type="number" placeholder="0–100" />
+      </div>
+      <button class="btn-add" onclick="addSubject()">+ เพิ่มวิชา</button>
+    </div>
+    <p class="form-error" id="formError"></p>
+  </div>
+
+  <!-- ── How-to button ── -->
+  <div class="howto-section">
+    <a class="btn-howto" href="howto.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>
+      </svg>
+      ดูวิธีทำ (How to)
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ──────────────────────────────────────────────
+//  Data
+// ──────────────────────────────────────────────
+let scores = [
+  { subject: 'English', national: 80, school: 72, me: 76, count: 1250 },
+  { subject: 'Thai',    national: 84, school: 75, me: 70, count: 1180 },
+  { subject: 'Math',    national: 68, school: 60, me: 60, count:  980 },
+  { subject: 'Science', national: 78, school: 81, me: 88, count: 1050 },
+];
+
+// ──────────────────────────────────────────────
+//  Helpers
+// ──────────────────────────────────────────────
+function getYMax(data) {
+  const vals = data.flatMap(d => [d.national, d.school, d.me]);
+  const raw  = vals.length ? Math.max(...vals) : 100;
+  return Math.max(100, Math.ceil(raw / 10) * 10 + 5);
+}
+
+function starPolygon(cx, cy, r) {
+  return Array.from({ length: 10 }, (_, i) => {
+    const angle  = (i * Math.PI) / 5 - Math.PI / 2;
+    const radius = i % 2 === 0 ? r : r * 0.42;
+    return `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`;
+  }).join(' ');
+}
+
+function fmt(n) { return Number(n).toLocaleString(); }
+
+// ──────────────────────────────────────────────
+//  Tooltip
+// ──────────────────────────────────────────────
+const tip = document.getElementById('tooltip');
+
+function showTip(e, html) {
+  tip.innerHTML = html;
+  tip.classList.add('show');
+  moveTip(e);
+}
+function moveTip(e) {
+  const x = e.clientX + 14, y = e.clientY - 10;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = (x + tw > window.innerWidth  ? x - tw - 28 : x) + 'px';
+  tip.style.top  = (y + th > window.innerHeight ? y - th      : y) + 'px';
+}
+function hideTip() { tip.classList.remove('show'); }
+
+// ──────────────────────────────────────────────
+//  Score Chart (SVG)
+// ──────────────────────────────────────────────
+function renderScoreChart() {
+  const wrap = document.getElementById('scoreChartWrap');
+  const W    = Math.max(wrap.parentElement.clientWidth - 2, scores.length * 110);
+  const H    = 420;
+  const many = scores.length > 5;
+  const m    = { top: 30, right: 24, left: 52, bottom: many ? 74 : 22 };
+  const plotW = W - m.left - m.right;
+  const plotH = H - m.top  - m.bottom;
+  const yMax  = getYMax(scores);
+  const bandW = plotW / (scores.length || 1);
+
+  const py = v => plotH - (v / yMax) * plotH;  // value → svg y (within plot)
+
+  // Y-axis ticks
+  const yTicks = [0, 25, 50, 75, 100].filter(t => t <= yMax);
+  if (yMax > 100) yTicks.push(yMax);
+
+  let grid = '', bars = '', xLabels = '', yLabels = '', overlays = '';
+
+  // Grid lines + Y labels
+  yTicks.forEach(t => {
+    const y = py(t);
+    grid    += `<line x1="0" y1="${y}" x2="${plotW}" y2="${y}" stroke="rgba(148,163,184,0.18)" stroke-width="1"/>`;
+    yLabels += `<text x="-8" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="11">${t}</text>`;
+  });
+
+  // Bars + X labels
+  scores.forEach((d, i) => {
+    const cx = i * bandW + bandW / 2;
+
+    const nationalH = Math.max(0, (d.national / yMax) * plotH);
+    const schoolH   = Math.max(0, (d.school   / yMax) * plotH);
+    const meY       = py(d.me);
+
+    // National — wide gray
+    bars += `
+      <rect x="${cx-26}" y="${py(d.national)}" width="52" height="${nationalH}"
+            fill="rgba(148,163,184,0.38)" stroke="rgba(100,116,139,0.22)" stroke-width="1" rx="7"/>`;
+
+    // School — narrow blue
+    bars += `
+      <rect x="${cx-14}" y="${py(d.school)}" width="28" height="${schoolH}"
+            fill="#2f6fed" rx="5"/>`;
+
+    // Star
+    bars += `
+      <polygon points="${starPolygon(cx, meY, 13)}"
+               fill="#f7c948" stroke="#fffbe6" stroke-width="1.5" stroke-linejoin="round"
+               style="filter:drop-shadow(0 0 7px rgba(247,201,72,0.95))"/>`;
+
+    // X label
+    const labelY = plotH + (many ? 16 : 18);
+    const rotate  = many ? `rotate(-38, ${cx}, ${labelY})` : '';
+    const anchor  = many ? 'end' : 'middle';
+    xLabels += `<text x="${cx}" y="${labelY}" text-anchor="${anchor}" transform="${rotate}"
+                      fill="#475569" font-size="${many ? 11 : 13}" font-weight="700">${d.subject}</text>`;
+
+    // Invisible hover overlay per band
+    const tipHtml = `
+      <strong style="font-size:0.92rem">${d.subject}</strong><br>
+      <span class="tt-dot" style="background:rgba(148,163,184,0.7)"></span>ค่าเฉลี่ยประเทศ: <strong>${d.national}</strong><br>
+      <span class="tt-dot" style="background:#2f6fed"></span>ค่าเฉลี่ยโรงเรียน: <strong>${d.school}</strong><br>
+      <span class="tt-dot" style="background:#f7c948"></span>คะแนนของฉัน: <strong>${d.me}</strong>`;
+    overlays += `
+      <rect x="${i * bandW}" y="0" width="${bandW}" height="${plotH}"
+            fill="transparent"
+            onmouseenter="showTip(event, \`${tipHtml.replace(/`/g,"'")}\`)"
+            onmousemove="moveTip(event)"
+            onmouseleave="hideTip()"/>`;
+  });
+
+  // Baseline
+  grid += `<line x1="0" y1="${plotH}" x2="${plotW}" y2="${plotH}" stroke="rgba(148,163,184,0.3)" stroke-width="1"/>`;
+
+  wrap.style.width  = W + 'px';
+  wrap.style.height = H + 'px';
+  wrap.innerHTML = `
+    <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(${m.left},${m.top})">
+        ${grid}
+        ${yLabels}
+        ${bars}
+        ${overlays}
+        ${xLabels}
+      </g>
+    </svg>`;
+}
+
+// ──────────────────────────────────────────────
+//  Count Chart (SVG)
+// ──────────────────────────────────────────────
+function renderCountChart() {
+  const wrap = document.getElementById('countChartWrap');
+  const W    = Math.max(wrap.parentElement.clientWidth - 2, scores.length * 110);
+  const H    = 300;
+  const many = scores.length > 5;
+  const m    = { top: 28, right: 24, left: 65, bottom: many ? 74 : 22 };
+  const plotW = W - m.left - m.right;
+  const plotH = H - m.top  - m.bottom;
+
+  const maxC  = scores.length ? Math.max(...scores.map(d => d.count)) : 0;
+  const yMax  = Math.ceil(maxC / 100) * 100 + 100;
+  const bandW = plotW / (scores.length || 1);
+  const barW  = Math.min(44, bandW * 0.55);
+  const py    = v => plotH - (v / yMax) * plotH;
+
+  const yTicks = [];
+  const step   = yMax <= 2000 ? 500 : yMax <= 10000 ? 2000 : 5000;
+  for (let t = 0; t <= yMax; t += step) yTicks.push(t);
+
+  let grid = '', bars = '', xLabels = '', yLabels = '', overlays = '';
+
+  yTicks.forEach(t => {
+    const y = py(t);
+    grid    += `<line x1="0" y1="${y}" x2="${plotW}" y2="${y}" stroke="rgba(148,163,184,0.18)" stroke-width="1"/>`;
+    yLabels += `<text x="-8" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="11">${fmt(t)}</text>`;
+  });
+
+  scores.forEach((d, i) => {
+    const cx = i * bandW + bandW / 2;
+    const bH = Math.max(0, (d.count / yMax) * plotH);
+    const bY = py(d.count);
+    const r  = Math.min(7, barW / 3);
+
+    bars += `
+      <rect x="${cx - barW/2}" y="${bY}" width="${barW}" height="${bH}"
+            fill="#0ea5e9" rx="${r}"/>
+      <text x="${cx}" y="${bY - 6}" text-anchor="middle"
+            fill="#0f172a" font-size="11" font-weight="700">${fmt(d.count)}</text>`;
+
+    const labelY = plotH + (many ? 16 : 18);
+    const rotate  = many ? `rotate(-38, ${cx}, ${labelY})` : '';
+    const anchor  = many ? 'end' : 'middle';
+    xLabels += `<text x="${cx}" y="${labelY}" text-anchor="${anchor}" transform="${rotate}"
+                      fill="#475569" font-size="${many ? 11 : 13}" font-weight="700">${d.subject}</text>`;
+
+    const tipHtml = `<strong>${d.subject}</strong><br>จำนวนผู้สอบ: <strong>${fmt(d.count)} คน</strong>`;
+    overlays += `
+      <rect x="${i * bandW}" y="0" width="${bandW}" height="${plotH}"
+            fill="transparent"
+            onmouseenter="showTip(event,\`${tipHtml.replace(/`/g,"'")}\`)"
+            onmousemove="moveTip(event)"
+            onmouseleave="hideTip()"/>`;
+  });
+
+  grid += `<line x1="0" y1="${plotH}" x2="${plotW}" y2="${plotH}" stroke="rgba(148,163,184,0.3)" stroke-width="1"/>`;
+
+  wrap.style.width  = W + 'px';
+  wrap.style.height = H + 'px';
+  wrap.innerHTML = `
+    <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(${m.left},${m.top})">
+        ${grid}${yLabels}${bars}${overlays}${xLabels}
+      </g>
+    </svg>`;
+}
+
+// ──────────────────────────────────────────────
+//  Table
+// ──────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('scoreTableBody');
+  tbody.innerHTML = scores.map((d, i) => `
+    <tr>
+      <td>${d.subject}</td>
+      <td>${fmt(d.count)}</td>
+      <td>${d.national}</td>
+      <td>${d.school}</td>
+      <td class="me-cell">${d.me}</td>
+      <td><button class="btn-del" onclick="removeSubject(${i})">ลบ</button></td>
+    </tr>`).join('');
+}
+
+// ──────────────────────────────────────────────
+//  Add / Remove
+// ──────────────────────────────────────────────
+function addSubject() {
+  const subject  = document.getElementById('f-subject').value.trim();
+  const count    = document.getElementById('f-count').value;
+  const national = document.getElementById('f-national').value;
+  const school   = document.getElementById('f-school').value;
+  const me       = document.getElementById('f-me').value;
+  const errEl    = document.getElementById('formError');
+
+  if (!subject)                                     { errEl.textContent = 'กรุณากรอกชื่อวิชา'; return; }
+  if (scores.some(s => s.subject === subject))      { errEl.textContent = `วิชา "${subject}" มีอยู่แล้ว`; return; }
+  if (!count || !national || !school || !me)        { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบทุกช่อง'; return; }
+
+  errEl.textContent = '';
+  scores.push({
+    subject,
+    national: +national || 0,
+    school:   +school   || 0,
+    me:       +me       || 0,
+    count:    +count    || 0,
+  });
+  ['f-subject','f-count','f-national','f-school','f-me']
+    .forEach(id => document.getElementById(id).value = '');
+  render();
+}
+
+function removeSubject(idx) {
+  scores.splice(idx, 1);
+  render();
+}
+
+// Enter key on last input submits form
+document.getElementById('f-me').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addSubject();
+});
+
+// ──────────────────────────────────────────────
+//  Render all
+// ──────────────────────────────────────────────
+function render() {
+  renderScoreChart();
+  renderCountChart();
+  renderTable();
+}
+
+render();
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(render, 120);
+});
+</script>
+</body>
+</html>

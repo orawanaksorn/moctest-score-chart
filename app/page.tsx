@@ -154,6 +154,25 @@ export default function Page() {
         {error && <p className="addCard__error">{error}</p>}
       </div>
 
+      {/* ---- How to button ---- */}
+      <div className="howtoWrap">
+        <a className="howtoBtn" href="/howto.html" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2.2"
+               strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <path d="M12 17h.01"/>
+          </svg>
+          ดูวิธีทำ (How to)
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2.5"
+               strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+
       <style jsx>{`
         .addCard {
           width: min(1140px, 100%);
@@ -245,12 +264,42 @@ export default function Page() {
           font-weight: 600;
         }
 
+        .howtoWrap {
+          width: min(1140px, 100%);
+          margin: 12px auto 0;
+          display: flex;
+          justify-content: center;
+          padding-bottom: 8px;
+        }
+
+        .howtoBtn {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 13px 30px;
+          border: 2px solid #2f6fed;
+          border-radius: 14px;
+          background: rgba(239, 246, 255, 0.8);
+          color: #2f6fed;
+          font-size: 0.97rem;
+          font-weight: 800;
+          text-decoration: none;
+          transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+        }
+
+        .howtoBtn:hover {
+          background: #2f6fed;
+          color: #fff;
+          box-shadow: 0 8px 24px rgba(47, 111, 237, 0.28);
+        }
+
         @media (max-width: 600px) {
           .addCard { padding: 18px; border-radius: 18px; }
           .addCard__form { flex-direction: column; }
           .addCard__field,
           .addCard__field--wide { flex: none; width: 100%; }
           .addCard__btn { width: 100%; }
+          .howtoBtn { width: 100%; justify-content: center; }
         }
       `}</style>
     </main>
