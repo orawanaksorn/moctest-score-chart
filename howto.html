@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How-to: Exam Score Comparison Chart</title>
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #2f6fed;
+      --sky:     #0ea5e9;
+      --gold:    #f7c948;
+      --red:     #dc2626;
+      --green:   #15803d;
+      --text:    #0f172a;
+      --muted:   #475569;
+      --border:  #e2e8f0;
+      --bg:      #f8fafc;
+      --card:    #ffffff;
+      --code-bg: #f1f5f9;
+      --radius:  14px;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    nav {
+      width: 260px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 28px 20px;
+      border-right: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    nav h2 {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    nav a {
+      display: block;
+      padding: 5px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: background 0.12s, color 0.12s;
+    }
+    nav a:hover { background: #f1f5f9; color: var(--blue); }
+    nav a.sub { padding-left: 22px; font-size: 0.82rem; }
+
+    main {
+      flex: 1;
+      max-width: 860px;
+      padding: 48px 40px 80px;
+    }
+
+    /* ── Typography ── */
+    h1 { font-size: 2.2rem; line-height: 1.15; margin-bottom: 12px; }
+    h2 { font-size: 1.45rem; font-weight: 800; margin: 48px 0 16px;
+         padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+    h3 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 10px; color: var(--blue); }
+    p  { margin-bottom: 14px; color: #334155; }
+
+    /* ── Badge / pill ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-blue  { background: #dbeafe; color: #1d4ed8; }
+    .badge-sky   { background: #e0f2fe; color: #0369a1; }
+    .badge-gold  { background: #fef9c3; color: #92400e; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red   { background: #fee2e2; color: #991b1b; }
+
+    /* ── Intro card ── */
+    .intro-card {
+      padding: 24px 28px;
+      border: 1px solid #bfdbfe;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+      margin-bottom: 40px;
+    }
+    .intro-card p { color: #1e3a5f; margin: 0; }
+
+    /* ── Step badge ── */
+    .step {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* ── Code blocks ── */
+    pre {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin: 14px 0 24px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    pre code.hljs { border-radius: var(--radius); padding: 18px 20px; }
+
+    code:not(.hljs) {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.85em;
+      color: #be185d;
+    }
+
+    /* ── Callout ── */
+    .callout {
+      display: flex;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: var(--radius);
+      margin: 18px 0 24px;
+      font-size: 0.9rem;
+    }
+    .callout-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.5; }
+    .callout.info  { background: #eff6ff; border-left: 4px solid var(--blue); }
+    .callout.warn  { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .callout.tip   { background: #f0fdf4; border-left: 4px solid #22c55e; }
+    .callout p { margin: 0; color: var(--text); }
+
+    /* ── Diagram ── */
+    .diagram {
+      display: flex;
+      align-items: flex-end;
+      gap: 0;
+      justify-content: center;
+      height: 160px;
+      padding: 20px 32px 0;
+      margin: 20px 0 28px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      position: relative;
+    }
+    .diagram-bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+    }
+    .bar-wrap {
+      position: relative;
+      width: 60px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 120px;
+    }
+    .bar-national {
+      position: absolute;
+      bottom: 0;
+      width: 52px;
+      height: 80px;
+      background: rgba(148,163,184,0.38);
+      border: 1.5px solid rgba(100,116,139,0.3);
+      border-radius: 6px 6px 0 0;
+    }
+    .bar-school {
+      position: absolute;
+      bottom: 0;
+      width: 28px;
+      height: 58px;
+      background: #2f6fed;
+      border-radius: 5px 5px 0 0;
+      z-index: 2;
+    }
+    .star-dot {
+      position: absolute;
+      bottom: 96px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 22px;
+      z-index: 3;
+      filter: drop-shadow(0 0 6px rgba(247,201,72,0.9));
+    }
+    .diagram-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .diagram-legend {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.8;
+      text-align: right;
+    }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 28px; font-size: 0.88rem; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #f1f5f9; font-size: 0.78rem; font-weight: 800;
+         text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── File tree ── */
+    .tree {
+      font-family: monospace;
+      font-size: 0.88rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin: 14px 0 28px;
+      line-height: 2;
+      color: #334155;
+    }
+    .tree .dir  { color: var(--blue); font-weight: 700; }
+    .tree .file { color: #334155; }
+    .tree .new  { color: var(--green); font-weight: 700; }
+    .tree .note { color: var(--muted); font-size: 0.8rem; }
+
+    /* ── Flow steps ── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 16px 0 28px;
+    }
+    .flow-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding-bottom: 22px;
+      position: relative;
+    }
+    .flow-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 28px;
+      bottom: 0;
+      width: 2px;
+      background: #e2e8f0;
+    }
+    .flow-body { flex: 1; }
+    .flow-body h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+    .flow-body p { margin: 0; font-size: 0.88rem; color: var(--muted); }
+
+    /* ── Section anchor ── */
+    section { scroll-margin-top: 24px; }
+
+    @media (max-width: 900px) {
+      nav { display: none; }
+      main { padding: 28px 20px 60px; }
+      h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ══ Sidebar ══ -->
+<nav>
+  <h2>สารบัญ</h2>
+  <a href="#overview">ภาพรวม</a>
+  <a href="#stack">Stack &amp; Dependencies</a>
+  <a href="#datatype">Data Type</a>
+  <a href="#concept">แนวคิดกราฟ Overlay</a>
+  <a href="#score-chart">Score Chart</a>
+  <a class="sub" href="#sc-star">StarGlyph</a>
+  <a class="sub" href="#sc-overlaybar">OverlayBar (หัวใจหลัก)</a>
+  <a class="sub" href="#sc-tooltip">Tooltip</a>
+  <a class="sub" href="#sc-full">Full Component</a>
+  <a href="#count-chart">Count Chart</a>
+  <a href="#state">State Management</a>
+  <a href="#edit">Inline Edit</a>
+  <a href="#plugin">นำไป Plug ใน Project อื่น</a>
+  <a href="#checklist">Checklist สรุป</a>
+</nav>
+
+<!-- ══ Main ══ -->
+<main>
+
+  <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">
+    Exam Score Chart — Developer Guide
+  </p>
+  <h1>วิธีสร้าง Exam Score Comparison Chart</h1>
+
+  <div class="intro-card">
+    <p>
+      เอกสารนี้อธิบายขั้นตอนและโค้ดทั้งหมดที่ใช้สร้างกราฟเปรียบเทียบคะแนนสอบ
+      ที่มีแท่ง <strong>ประเทศ</strong> กว้าง (สีเทา) ทับซ้อนกับแท่ง <strong>โรงเรียน</strong> แคบ (สีน้ำเงิน)
+      และ <strong>ดาวทอง</strong> แสดงคะแนนตัวเอง
+      รวมถึงกราฟจำนวนผู้สอบแยกต่างหาก และ UI จัดการข้อมูลแบบ inline
+    </p>
+  </div>
+
+  <!-- ══ 1. Overview ══ -->
+  <section id="overview">
+    <h2>1. ภาพรวม (Overview)</h2>
+
+    <p>กราฟประกอบด้วย 2 ส่วนหลักที่แสดงข้อมูลเดียวกัน:</p>
+    <table>
+      <thead><tr><th>Component</th><th>แสดงอะไร</th><th>Library หลัก</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>ScoreChart</code></td>
+          <td>แท่ง Overlay (ประเทศ/รร./ดาว) + ตาราง inline edit</td>
+          <td>Recharts <code>ComposedChart</code></td>
+        </tr>
+        <tr>
+          <td><code>CountChart</code></td>
+          <td>แท่งแสดงจำนวนผู้สอบรายวิชา</td>
+          <td>Recharts <code>BarChart</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="diagram">
+      <div class="diagram-bar-group">
+        <div class="bar-wrap">
+          <div class="bar-national"></div>
+          <div class="bar-school"></div>
+          <div class="star-dot">★</div>
+        </div>
+        <span class="diagram-label">Math</span>
+      </div>
+      <div class="diagram-legend">
+        <span style="color:rgba(100,116,139,0.8)">■</span> ค่าเฉลี่ยประเทศ (กว้าง)<br>
+        <span style="color:#2f6fed">■</span> ค่าเฉลี่ยโรงเรียน (แคบ ทับใน)<br>
+        <span style="color:#f7c948">★</span> คะแนนของฉัน
+      </div>
+    </div>
+
+    <div class="callout info">
+      <span class="callout-icon">💡</span>
+      <p>
+        เทคนิคสำคัญ: ใช้ <strong>Bar เดียว</strong> (<code>dataKey="national"</code>) แต่ custom
+        <code>shape</code> function วาด 3 element พร้อมกัน ทำให้
+        <strong>cx เดียวกัน 100%</strong> โดยไม่ต้องกังวลเรื่อง bar group spacing
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ 2. Stack ══ -->
+  <section id="stack">
+    <h2>2. Stack &amp; Dependencies</h2>
+
+    <h3>สิ่งที่ต้องติดตั้ง</h3>
+    <pre><code class="language-bash">npm install recharts
+# recharts นำ react และ react-dom มาเองถ้าใช้ Next.js</code></pre>
+
+    <table>
+      <thead><tr><th>Package</th><th>Version ที่ทดสอบ</th><th>ใช้ทำอะไร</th></tr></thead>
+      <tbody>
+        <tr><td><code>next</code></td><td>^16.2</td><td>Framework (ใช้ App Router)</td></tr>
+        <tr><td><code>react</code></td><td>^19</td><td>UI library</td></tr>
+        <tr><td><code>recharts</code></td><td>^3.1</td><td>กราฟทั้งหมด</td></tr>
+        <tr><td><code>styled-jsx</code></td><td>built-in Next.js</td><td>Scoped CSS ใน component</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <span class="callout-icon">⚠️</span>
+      <p>
+        ถ้าไม่ได้ใช้ Next.js ให้เปลี่ยน <code>&lt;style jsx&gt;</code> เป็น CSS Module
+        หรือ <code>styled-components</code> แทน — โลจิก chart ไม่เปลี่ยน
+      </p>
+    </div>
+
+    <h3>Import ที่ใช้จาก Recharts</h3>
+    <pre><code class="language-typescript">// Score Chart
+import {
+  Bar, CartesianGrid, ComposedChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
+
+// Count Chart
+import {
+  Bar, BarChart, CartesianGrid, LabelList,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';</code></pre>
+  </section>
+
+  <!-- ══ 3. Data Type ══ -->
+  <section id="datatype">
+    <h2>3. Data Type</h2>
+
+    <p>ข้อมูลทั้งหมดอยู่ใน array ของ <code>Score</code>:</p>
+    <pre><code class="language-typescript">export type Score = {
+  subject: string;   // ชื่อวิชา เช่น "Math"
+  national: number;  // ค่าเฉลี่ยระดับประเทศ
+  school:   number;  // ค่าเฉลี่ยโรงเรียน
+  me:       number;  // คะแนนของนักเรียนคนนั้น
+  count:    number;  // จำนวนผู้เข้าสอบ
+};</code></pre>
+
+    <h3>ตัวอย่างข้อมูล</h3>
+    <pre><code class="language-typescript">const scores: Score[] = [
+  { subject: 'English', national: 80, school: 72, me: 76, count: 1250 },
+  { subject: 'Math',    national: 68, school: 60, me: 60, count:  980 },
+  { subject: 'Science', national: 78, school: 81, me: 88, count: 1050 },
+];</code></pre>
+  </section>
+
+  <!-- ══ 4. Concept ══ -->
+  <section id="concept">
+    <h2>4. แนวคิดกราฟ Overlay</h2>
+
+    <p>
+      ปัญหาหลักของกราฟชนิดนี้คือต้องการให้ 3 element
+      (แท่งประเทศ, แท่งรร., ดาว) อยู่ที่ <strong>แกน x เดียวกัน</strong>
+      ซึ่ง Recharts ปกติจะจัดแท่งในกลุ่มเดียวกันแบบ side-by-side
+    </p>
+
+    <h3>วิธีแก้ — Single Bar + Custom Shape</h3>
+
+    <div class="flow">
+      <div class="flow-item">
+        <div class="step">1</div>
+        <div class="flow-body">
+          <h4>ใช้ Bar เดียว (<code>dataKey="national"</code>)</h4>
+          <p>Recharts คำนวณ y, height ให้สำหรับคะแนนประเทศ รวมถึงกำหนด x, width ของ slot</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="step">2</div>
+        <div class="flow-body">
+          <h4>Custom <code>shape</code> function ได้รับ props จาก Recharts</h4>
+          <p><code>x, y, width, height, payload</code> — ทุก element ใช้ x+width/2 เป็น cx เดียวกัน</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="step">3</div>
+        <div class="flow-body">
+          <h4>คำนวณ y ของ School และ Star จาก Scale ของ National</h4>
+          <p>
+            <code>baselineY = y + height</code> (pixel ที่ value = 0)<br>
+            <code>pixPerUnit = height / national</code><br>
+            <code>schoolY = baselineY − school × pixPerUnit</code>
+          </p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="step">4</div>
+        <div class="flow-body">
+          <h4>วาด 3 element ใน <code>&lt;g&gt;</code> เดียว</h4>
+          <p>ลำดับใน SVG: national rect (ล่างสุด) → school rect → star polygon (บนสุด)</p>
+        </div>
+      </div>
+    </div>
+
+    <pre><code class="language-typescript">// สูตรคำนวณ y position ทั้ง 3 element
+function OverlayBar(props: any) {
+  const { x = 0, width = 0, y = 0, height = 0, payload } = props;
+
+  const cx        = x + width / 2;          // center x — ใช้ร่วมกันทุก element
+  const baselineY = y + height;             // y ของ value = 0 (แกน x)
+  const pixPerUnit = payload.national > 0   // pixel ต่อ 1 หน่วยคะแนน
+    ? height / payload.national
+    : 0;
+
+  const schoolH = payload.school * pixPerUnit;
+  const schoolY = baselineY - schoolH;
+
+  const meY = baselineY - payload.me * pixPerUnit;   // y ของดาว
+
+  return (
+    &lt;g&gt;
+      {/* แท่งประเทศ — กว้าง 52px */}
+      &lt;rect x={cx - 26} y={y} width={52} height={height} ... /&gt;
+      {/* แท่งรร. — แคบ 28px ทับอยู่ข้างใน */}
+      &lt;rect x={cx - 14} y={schoolY} width={28} height={schoolH} ... /&gt;
+      {/* ดาว — อยู่ที่ระดับคะแนน me */}
+      &lt;StarGlyph cx={cx} cy={meY} /&gt;
+    &lt;/g&gt;
+  );
+}</code></pre>
+  </section>
+
+  <!-- ══ 5. Score Chart ══ -->
+  <section id="score-chart">
+    <h2>5. Score Chart — Code ทีละส่วน</h2>
+
+    <!-- StarGlyph -->
+    <h3 id="sc-star">5.1 StarGlyph — ดาว 5 แฉก</h3>
+    <p>วาดด้วย SVG <code>&lt;polygon&gt;</code> คำนวณจุดยอด 10 จุด (สลับ outer/inner radius):</p>
+    <pre><code class="language-typescript">function starPolygon(cx: number, cy: number, r: number): string {
+  return Array.from({ length: 10 }, (_, i) => {
+    const angle  = (i * Math.PI) / 5 - Math.PI / 2;  // เริ่มจากยอดบน
+    const radius = i % 2 === 0 ? r : r * 0.42;        // สลับ outer/inner
+    return `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`;
+  }).join(' ');
+}
+
+function StarGlyph({ cx, cy }: { cx: number; cy: number }) {
+  return (
+    &lt;g style={{ filter: 'drop-shadow(0 0 7px rgba(247,201,72,0.95))' }}&gt;
+      &lt;polygon
+        points={starPolygon(cx, cy, 13)}  // r=13 px
+        fill="#f7c948"
+        stroke="#fffbe6"
+        strokeWidth={1.5}
+      /&gt;
+    &lt;/g&gt;
+  );
+}</code></pre>
+
+    <!-- OverlayBar -->
+    <h3 id="sc-overlaybar">5.2 OverlayBar — หัวใจของกราฟ</h3>
+    <pre><code class="language-typescript">function OverlayBar(props: any) {
+  const { payload, x = 0, width = 0, y = 0, height = 0 } = props;
+  if (!payload) return null;
+
+  const cx         = x + width / 2;
+  const baselineY  = y + height;
+  const pixPerUnit = payload.national > 0 ? height / payload.national : 0;
+
+  const nationalH = Math.max(0, height);
+  const schoolH   = Math.max(0, Math.round(payload.school * pixPerUnit));
+  const schoolY   = baselineY - schoolH;
+  const meY       = baselineY - Math.max(0, payload.me * pixPerUnit);
+
+  return (
+    &lt;g&gt;
+      {/* ① ประเทศ — กว้าง สีเทา วาดก่อน (อยู่ล่าง) */}
+      &lt;rect
+        x={cx - 26} y={y}
+        width={52} height={nationalH}
+        fill="rgba(148,163,184,0.38)"
+        stroke="rgba(100,116,139,0.22)" strokeWidth={1}
+        rx={7}
+      /&gt;
+      {/* ② โรงเรียน — แคบ สีน้ำเงิน วาดทีหลัง (อยู่หน้า) */}
+      &lt;rect
+        x={cx - 14} y={schoolY}
+        width={28} height={schoolH}
+        fill="#2f6fed" rx={5}
+      /&gt;
+      {/* ③ ดาว — คะแนนตัวเอง */}
+      &lt;StarGlyph cx={cx} cy={meY} /&gt;
+    &lt;/g&gt;
+  );
+}</code></pre>
+
+    <!-- Tooltip -->
+    <h3 id="sc-tooltip">5.3 Custom Tooltip</h3>
+    <p>
+      เพราะใช้ Bar เดียว payload จาก recharts มีแค่ national —
+      ให้อ่านข้อมูลครบจาก <code>payload[0].payload</code> (row เดิม):
+    </p>
+    <pre><code class="language-typescript">function ScoreTooltip({ active, label, payload }: {
+  active?: boolean;
+  label?: string;
+  payload?: Array&lt;{ payload?: Score }&gt;;
+}) {
+  if (!active || !label || !payload?.length) return null;
+  const row = payload[0]?.payload;          // ← row ต้นฉบับ มีครบทุก field
+  if (!row) return null;
+  return (
+    &lt;div className="scoreTooltip"&gt;
+      &lt;p&gt;&lt;strong&gt;{label}&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;ค่าเฉลี่ยประเทศ: &lt;strong&gt;{row.national}&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;ค่าเฉลี่ยโรงเรียน: &lt;strong&gt;{row.school}&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;คะแนนของฉัน: &lt;strong&gt;{row.me}&lt;/strong&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <!-- Full Component -->
+    <h3 id="sc-full">5.4 ComposedChart ที่สมบูรณ์</h3>
+    <pre><code class="language-typescript">export function ScoreChart({ data, title = 'เปรียบเทียบคะแนนสอบ' }: ScoreChartProps) {
+  // คำนวณ Y max แบบ dynamic — ขยายถ้าคะแนนเกิน 100
+  const allValues = data.flatMap((d) => [d.national, d.school, d.me]);
+  const rawMax    = allValues.length ? Math.max(...allValues) : 100;
+  const yMax      = Math.max(100, Math.ceil(rawMax / 10) * 10 + 5);
+
+  const manySubjects  = data.length > 5;
+  const chartMinWidth = Math.max(480, data.length * 110);  // ขยาย + scroll
+
+  return (
+    &lt;div style={{ minWidth: chartMinWidth, height: 420 }}&gt;
+      &lt;ResponsiveContainer width="100%" height="100%"&gt;
+        &lt;ComposedChart
+          data={data}
+          margin={{ top: 30, right: 24, left: 0, bottom: manySubjects ? 64 : 16 }}
+        &gt;
+          &lt;CartesianGrid vertical={false} stroke="rgba(148,163,184,0.18)" /&gt;
+
+          &lt;XAxis
+            dataKey="subject"
+            axisLine={false} tickLine={false}
+            tick={{ fill: '#475569', fontSize: 13, fontWeight: 700 }}
+            angle={manySubjects ? -38 : 0}      // เอียง label ถ้าวิชาเยอะ
+            textAnchor={manySubjects ? 'end' : 'middle'}
+            height={manySubjects ? 80 : 40}
+          /&gt;
+
+          &lt;YAxis
+            domain={[0, yMax]}                   // dynamic domain
+            axisLine={false} tickLine={false}
+            tick={{ fill: '#64748b', fontSize: 12 }}
+            width={36}
+          /&gt;
+
+          &lt;Tooltip content={&lt;ScoreTooltip /&gt;} cursor={{ fill: 'rgba(15,23,42,0.04)' }} /&gt;
+
+          {/* Bar เดียวที่วาดทั้ง 3 element */}
+          &lt;Bar
+            dataKey="national"
+            barSize={56}
+            shape={(p: any) =&gt; &lt;OverlayBar {...p} /&gt;}
+            isAnimationActive={false}
+          /&gt;
+        &lt;/ComposedChart&gt;
+      &lt;/ResponsiveContainer&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <div class="callout tip">
+      <span class="callout-icon">✅</span>
+      <p>
+        <code>isAnimationActive={false}</code> จำเป็น —
+        animation ใน recharts ทำให้ custom shape flicker ระหว่าง transition
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ 6. Count Chart ══ -->
+  <section id="count-chart">
+    <h2>6. Count Chart — กราฟจำนวนผู้สอบ</h2>
+
+    <p>ใช้ <code>BarChart</code> (ไม่ใช่ ComposedChart) เพราะมี series เดียว ง่ายกว่า:</p>
+    <pre><code class="language-typescript">function CountBar({ x = 0, y = 0, width = 0, height = 0 }: any) {
+  if (height &lt;= 0) return null;
+  const r = Math.min(7, width / 3);       // rounded top corners
+  return &lt;rect x={x} y={y} width={width} height={height} fill="#0ea5e9" rx={r} /&gt;;
+}
+
+export function CountChart({ data }: { data: Score[] }) {
+  const maxCount = data.length ? Math.max(...data.map((d) => d.count)) : 0;
+  const yMax     = Math.ceil(maxCount / 100) * 100 + 100;
+
+  return (
+    &lt;ResponsiveContainer width="100%" height={300}&gt;
+      &lt;BarChart data={data} margin={{ top: 28, right: 24, left: 0, bottom: 16 }}&gt;
+        &lt;CartesianGrid vertical={false} stroke="rgba(148,163,184,0.18)" /&gt;
+        &lt;XAxis dataKey="subject" axisLine={false} tickLine={false}
+               tick={{ fill: '#475569', fontSize: 13, fontWeight: 700 }} /&gt;
+        &lt;YAxis domain={[0, yMax]} axisLine={false} tickLine={false}
+               tick={{ fill: '#64748b', fontSize: 12 }} width={52}
+               tickFormatter={(v: number) =&gt; v.toLocaleString()} /&gt;
+        &lt;Tooltip cursor={{ fill: 'rgba(15,23,42,0.04)' }} /&gt;
+        &lt;Bar dataKey="count" barSize={44} shape={(p: any) =&gt; &lt;CountBar {...p} /&gt;}
+             isAnimationActive={false}&gt;
+          {/* Label ตัวเลขบนแท่ง */}
+          &lt;LabelList
+            dataKey="count"
+            position="top"
+            formatter={(v: unknown) =&gt;
+              typeof v === 'number' ? v.toLocaleString() : String(v ?? '')}
+            style={{ fill: '#0f172a', fontSize: 11, fontWeight: 700 }}
+          /&gt;
+        &lt;/Bar&gt;
+      &lt;/BarChart&gt;
+    &lt;/ResponsiveContainer&gt;
+  );
+}</code></pre>
+  </section>
+
+  <!-- ══ 7. State ══ -->
+  <section id="state">
+    <h2>7. State Management (Page Level)</h2>
+
+    <p>
+      State ทั้งหมดอยู่ใน <code>page.tsx</code> (Client Component) —
+      ส่งลงให้ chart ผ่าน props และรับ callback กลับมา:
+    </p>
+    <pre><code class="language-typescript">'use client';
+import { useState } from 'react';
+
+export default function Page() {
+  const [scores, setScores] = useState&lt;Score[]&gt;(DEFAULT_SCORES);
+
+  // เพิ่มวิชา
+  function addSubject(newScore: Score) {
+    setScores((prev) => [...prev, newScore]);
+  }
+
+  // ลบวิชา
+  function removeSubject(subject: string) {
+    setScores((prev) => prev.filter((s) => s.subject !== subject));
+  }
+
+  // แก้ไขวิชา (replace by subject key)
+  function editSubject(oldSubject: string, updated: Score) {
+    setScores((prev) => prev.map((s) => s.subject === oldSubject ? updated : s));
+  }
+
+  return (
+    &lt;&gt;
+      &lt;ScoreChart data={scores} onRemove={removeSubject} onEdit={editSubject} /&gt;
+      &lt;CountChart data={scores} /&gt;
+      {/* form เพิ่มวิชา */}
+    &lt;/&gt;
+  );
+}</code></pre>
+  </section>
+
+  <!-- ══ 8. Inline Edit ══ -->
+  <section id="edit">
+    <h2>8. Inline Edit ในตาราง</h2>
+
+    <p>
+      Edit state เก็บใน <code>ScoreChart</code> เอง (local state)
+      แล้ว call <code>onEdit</code> callback เมื่อบันทึก:
+    </p>
+    <pre><code class="language-typescript">// State ใน ScoreChart component
+const [editingKey, setEditingKey] = useState&lt;string | null&gt;(null);
+const [editForm,   setEditForm]   = useState&lt;EditForm&gt;({ subject:'', national:'', ... });
+
+// เริ่ม edit
+function startEdit(item: Score) {
+  setEditingKey(item.subject);
+  setEditForm({ subject: item.subject, national: String(item.national), ... });
+}
+
+// บันทึก → ส่งค่าใหม่ขึ้นไปหา parent
+function saveEdit() {
+  if (!editingKey || !onEdit) return;
+  const subject = editForm.subject.trim();
+
+  // Validate
+  if (!subject) { setEditError('ชื่อวิชาห้ามว่าง'); return; }
+  if (subject !== editingKey && data.some((d) => d.subject === subject)) {
+    setEditError(`วิชา "${subject}" มีอยู่แล้ว`); return;
+  }
+
+  onEdit(editingKey, {
+    subject,
+    national: Number(editForm.national) || 0,
+    school:   Number(editForm.school)   || 0,
+    me:       Number(editForm.me)       || 0,
+    count:    Number(editForm.count)    || 0,
+  });
+  setEditingKey(null);
+}</code></pre>
+
+    <p>ใน JSX ตาราง ตรวจสอบ <code>isEditing</code> เพื่อ switch ระหว่าง text และ input:</p>
+    <pre><code class="language-typescript">data.map((item) => {
+  const isEditing = editingKey === item.subject;
+  return (
+    &lt;tr key={item.subject}&gt;
+      {isEditing ? (
+        // Mode แก้ไข — แสดง input fields
+        &lt;&gt;
+          &lt;td&gt;&lt;input value={editForm.subject} onChange={setEF('subject')} /&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;input type="number" value={editForm.national} onChange={setEF('national')} /&gt;&lt;/td&gt;
+          {/* ... */}
+          &lt;td&gt;
+            &lt;button onClick={saveEdit}&gt;บันทึก&lt;/button&gt;
+            &lt;button onClick={cancelEdit}&gt;ยกเลิก&lt;/button&gt;
+          &lt;/td&gt;
+        &lt;/&gt;
+      ) : (
+        // Mode ดูข้อมูล — แสดงค่าและปุ่ม
+        &lt;&gt;
+          &lt;td&gt;{item.subject}&lt;/td&gt;
+          &lt;td&gt;{item.national}&lt;/td&gt;
+          {/* ... */}
+          &lt;td&gt;
+            &lt;button onClick={() =&gt; startEdit(item)}&gt;แก้ไข&lt;/button&gt;
+            &lt;button onClick={() =&gt; onRemove?.(item.subject)}&gt;ลบ&lt;/button&gt;
+          &lt;/td&gt;
+        &lt;/&gt;
+      )}
+    &lt;/tr&gt;
+  );
+})</code></pre>
+  </section>
+
+  <!-- ══ 9. Plugin ══ -->
+  <section id="plugin">
+    <h2>9. นำไป Plug ใน Project อื่น</h2>
+
+    <h3>โครงสร้างไฟล์ที่ต้องก็อป</h3>
+    <div class="tree">
+      <span class="dir">your-project/</span><br>
+      &nbsp;&nbsp;<span class="dir">components/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="new">score-chart.tsx</span> &nbsp;<span class="note">← chart + ตาราง inline edit (export Score type ด้วย)</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="new">count-chart.tsx</span> &nbsp;<span class="note">← กราฟจำนวนคน (import Score จาก score-chart)</span><br>
+      &nbsp;&nbsp;<span class="dir">app/ หรือ pages/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">page.tsx</span> &nbsp;<span class="note">← state + form เพิ่มวิชา + render ทั้ง 2 chart</span>
+    </div>
+
+    <h3>Props ที่ต้องส่งให้ ScoreChart</h3>
+    <table>
+      <thead><tr><th>Prop</th><th>Type</th><th>Required</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>
+        <tr><td><code>data</code></td><td><code>Score[]</code></td><td><span class="badge badge-red">Required</span></td><td>ข้อมูลทั้งหมด</td></tr>
+        <tr><td><code>title</code></td><td><code>string</code></td><td><span class="badge badge-green">Optional</span></td><td>ค่า default: "เปรียบเทียบคะแนนสอบ"</td></tr>
+        <tr><td><code>onRemove</code></td><td><code>(subject: string) => void</code></td><td><span class="badge badge-green">Optional</span></td><td>ถ้าไม่ส่ง ปุ่มลบจะไม่แสดง</td></tr>
+        <tr><td><code>onEdit</code></td><td><code>(old: string, updated: Score) => void</code></td><td><span class="badge badge-green">Optional</span></td><td>ถ้าไม่ส่ง ปุ่มแก้ไขจะไม่แสดง</td></tr>
+      </tbody>
+    </table>
+
+    <h3>ถ้าไม่ต้องการ Edit/Delete</h3>
+    <pre><code class="language-tsx">// Minimal usage — แสดงกราฟอย่างเดียว ไม่มีปุ่ม
+&lt;ScoreChart data={myScores} /&gt;
+&lt;CountChart data={myScores} /&gt;</code></pre>
+
+    <h3>ถ้าต้องการ Dynamic (เพิ่ม/ลบ/แก้ไข)</h3>
+    <pre><code class="language-tsx">&lt;ScoreChart
+  data={scores}
+  onRemove={(subject) =&gt; setScores(prev =&gt; prev.filter(s =&gt; s.subject !== subject))}
+  onEdit={(oldKey, updated) =&gt; setScores(prev =&gt; prev.map(s =&gt; s.subject === oldKey ? updated : s))}
+/&gt;</code></pre>
+
+    <div class="callout info">
+      <span class="callout-icon">📦</span>
+      <p>
+        ทั้ง <code>ScoreChart</code> และ <code>CountChart</code> มี
+        <code>'use client'</code> อยู่แล้ว — ใช้ได้ใน Next.js App Router โดยตรง
+        ไม่ต้องเพิ่ม directive อื่นเพิ่ม
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ 10. Checklist ══ -->
+  <section id="checklist">
+    <h2>10. Checklist สรุป</h2>
+
+    <table>
+      <thead><tr><th>#</th><th>สิ่งที่ต้องทำ</th><th>ไฟล์</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><code>npm install recharts</code></td><td>—</td></tr>
+        <tr><td>2</td><td>สร้าง / ก็อป <code>Score</code> type</td><td><code>score-chart.tsx</code></td></tr>
+        <tr><td>3</td><td>สร้าง <code>StarGlyph</code> (SVG polygon)</td><td><code>score-chart.tsx</code></td></tr>
+        <tr><td>4</td><td>สร้าง <code>OverlayBar</code> (วาด 3 element ใน &lt;g&gt;)</td><td><code>score-chart.tsx</code></td></tr>
+        <tr><td>5</td><td>สร้าง <code>ScoreTooltip</code> (อ่านจาก <code>payload[0].payload</code>)</td><td><code>score-chart.tsx</code></td></tr>
+        <tr><td>6</td><td>ประกอบ <code>ComposedChart</code> ใส่ Bar เดียว</td><td><code>score-chart.tsx</code></td></tr>
+        <tr><td>7</td><td>สร้าง <code>CountChart</code> ด้วย <code>BarChart + LabelList</code></td><td><code>count-chart.tsx</code></td></tr>
+        <tr><td>8</td><td>จัดการ state ที่ <code>page.tsx</code> และส่ง callback ลงไป</td><td><code>page.tsx</code></td></tr>
+        <tr><td>9</td><td>(Optional) เพิ่ม inline edit ใน table ด้วย local state</td><td><code>score-chart.tsx</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout tip" style="margin-top:24px;">
+      <span class="callout-icon">🔗</span>
+      <p>
+        Source code เต็ม:
+        <a href="https://github.com/orawanaksorn/moctest-score-chart" target="_blank">
+          github.com/orawanaksorn/moctest-score-chart
+        </a>
+      </p>
+    </div>
+  </section>
+
+</main>
+</div>
+</body>
+</html>
